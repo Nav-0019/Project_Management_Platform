@@ -1,6 +1,7 @@
 package com.example.myapplication.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -10,6 +11,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -53,14 +56,27 @@ fun FacultyHome() {
             Text("Team Members", fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(bottom = 8.dp))
             PMCard(modifier = Modifier.padding(bottom = 14.dp)) {
                 Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    t.members.forEachIndexed { i, m -> Row(verticalAlignment = Alignment.CenterVertically) { PMAvatar(m, size = 34, color = if(i==0) MaterialTheme.colorScheme.primary else Accent); Spacer(Modifier.width(10.dp)); Column { Text(m, fontSize = 13.sp, fontWeight = FontWeight.SemiBold); Text(if(i==0) "Leader" else "Member", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) } } }
+                    for ((i, m) in t.members.withIndex()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            PMAvatar(m, size = 34, color = if(i==0) MaterialTheme.colorScheme.primary else Accent)
+                            Spacer(Modifier.width(10.dp))
+                            Column {
+                                Text(m, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                Text(if(i==0) "Leader" else "Member", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
                 }
             }
             Text("Project Goals", fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(bottom = 8.dp))
             PMCard(modifier = Modifier.padding(bottom = 14.dp)) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    listOf("Build an AI model for early disease detection", "Integrate with hospital management systems", "Achieve 90%+ accuracy on test dataset").forEach { g ->
-                        Row(modifier = Modifier.padding(vertical = 4.dp)) { Icon(Icons.Default.CheckCircle, null, tint = Success, modifier = Modifier.size(14.dp).padding(end=4.dp)); Spacer(Modifier.width(6.dp)); Text(g, fontSize = 13.sp) }
+                    for (g in listOf("Build an AI model for early disease detection", "Integrate with hospital management systems", "Achieve 90%+ accuracy on test dataset")) {
+                        Row(modifier = Modifier.padding(vertical = 4.dp)) {
+                            Icon(Icons.Default.CheckCircle, null, tint = Success, modifier = Modifier.size(14.dp).padding(end=4.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(g, fontSize = 13.sp)
+                        }
                     }
                 }
             }
@@ -79,13 +95,18 @@ fun FacultyHome() {
             Text("Assistant Professor, Dept. of Computer Applications", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)) {
-            listOf(Triple("Active", "5", MaterialTheme.colorScheme.primary), Triple("Pending", "2", Warning), Triple("Approved", "8", Success)).forEach { s ->
-                PMCard(modifier = Modifier.weight(1f)) { Column(modifier = Modifier.padding(12.dp)) { Text(s.first, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(s.second, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = s.third) } }
+            for (s in listOf(Triple("Active", "5", MaterialTheme.colorScheme.primary), Triple("Pending", "2", Warning), Triple("Approved", "8", Success))) {
+                PMCard(modifier = Modifier.weight(1f)) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(s.first, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(s.second, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = s.third)
+                    }
+                }
             }
         }
         Text("Your Teams", fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 10.dp))
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            teams.forEach { t ->
+            for (t in teams) {
                 PMCard(onClick = { selectedTeam = t }) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
@@ -121,7 +142,7 @@ fun FacultyRegistrations() {
         Text("Registrations", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 16.dp))
         Text("Pending Requests", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 10.dp))
         Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 24.dp)) {
-            pending.forEach { (name, proj) ->
+            for ((name, proj) in pending) {
                 PMCard {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -274,7 +295,7 @@ fun FacultyReviewHub() {
         PMInput("Search submissions...", value = searchQuery, onValueChange = { searchQuery = it }, icon = Icons.Default.Search)
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            tabs.forEach { t ->
+            for (t in tabs) {
                 val isActive = tab == t
                 Box(modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant).clickable { tab = t }.padding(horizontal = 14.dp, vertical = 8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -290,7 +311,7 @@ fun FacultyReviewHub() {
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            filtered.forEach { s ->
+            for (s in filtered) {
                 val status = s["status"] as String
                 val statusColor = when (status) { "approved" -> Success; "new" -> MaterialTheme.colorScheme.primary; else -> Warning }
                 PMCard(onClick = { selectedId = s["id"] as Int }) {
@@ -298,7 +319,7 @@ fun FacultyReviewHub() {
                         Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                 PMAvatar(s["student"] as String, size = 38, color = MaterialTheme.colorScheme.primary)
-                        Column(modifier = Modifier.weight(1f)) {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(s["student"] as String, fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                                     Text(s["project"] as String, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                                 }
@@ -333,7 +354,7 @@ fun FacultyForm() {
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = 90.dp)) {
         Text("Create Form", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-            listOf("announcement" to "📢 Announcement", "task" to "📋 Task").forEach { (key, label) ->
+            for ((key, label) in listOf("announcement" to "📢 Announcement", "task" to "📋 Task")) {
                 val isActive = type == key
                 Box(
                     modifier = Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
@@ -363,7 +384,9 @@ fun FacultyForm() {
                             }
                         }
                         DropdownMenu(expanded = teamExpanded, onDismissRequest = { teamExpanded = false }) {
-                            teamOptions.forEach { opt -> DropdownMenuItem(text = { Text(opt) }, onClick = { selectedTeam = opt; teamExpanded = false }) }
+                            for (opt in teamOptions) {
+                                DropdownMenuItem(text = { Text(opt) }, onClick = { selectedTeam = opt; teamExpanded = false })
+                            }
                         }
                     }
                     if (type == "task") {
@@ -397,15 +420,20 @@ fun FacultyForm() {
 // ─── FACULTY PROFILE ─────────────────────────────────────────────────────────
 @Composable
 fun FacultyProfile(prefs: com.example.myapplication.data.PreferencesManager, themeMode: String, onThemeChange: (String) -> Unit, onLogout: () -> Unit) {
-    val userName = prefs.getActiveName()
+    val rawName = prefs.getActiveName()
+    val userName = if (rawName.startsWith("Dr. ", ignoreCase = true) || rawName.startsWith("Dr.", ignoreCase = true)) rawName else "Dr. $rawName"
     val userEmail = prefs.getActiveEmail()
     val dept = prefs.getActiveDept()
+    val expertiseTags = listOf("Data Science", "AI/ML", "Web Dev", "Research", "Cloud Computing", "Cyber Security")
+    var selectedExpertise by remember { mutableStateOf(listOf("Data Science", "AI/ML")) }
+    val researchOptions = listOf("Predictive Healthcare Analytics", "NLP for Education Systems", "Computer Vision", "IoT & Embedded Systems", "Blockchain Applications")
+    var selectedResearch by remember { mutableStateOf(listOf("Predictive Healthcare Analytics", "NLP for Education Systems")) }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = 90.dp)) {
         Column(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             PMAvatar(userName, size = 80, color = Accent)
             Spacer(modifier = Modifier.height(12.dp))
-            Text(if (userName.startsWith("Dr.")) userName else "Dr. $userName", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+            Text(userName, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
             Text(userEmail, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text("Faculty · $dept", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(8.dp))
@@ -414,11 +442,21 @@ fun FacultyProfile(prefs: com.example.myapplication.data.PreferencesManager, the
         PMCard(modifier = Modifier.padding(bottom = 12.dp)) {
             Column(modifier = Modifier.padding(14.dp)) {
                 Text("Expertise & Experience", fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 10.dp))
-                Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                androidx.compose.foundation.layout.FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    listOf("Data Science", "AI/ML", "Web Dev", "Research").forEach { PMBadge(it, color = Accent) }
+                    for (tag in expertiseTags) {
+                        val selected = tag in selectedExpertise
+                        Box(
+                            modifier = Modifier.padding(bottom = 6.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+                                .background(if (selected) Accent else MaterialTheme.colorScheme.surfaceVariant)
+                                .clickable { selectedExpertise = if (selected) selectedExpertise - tag else selectedExpertise + tag }
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(tag, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
                 }
                 Text("8 Years of Experience", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 10.dp))
             }
@@ -426,11 +464,20 @@ fun FacultyProfile(prefs: com.example.myapplication.data.PreferencesManager, the
         PMCard(modifier = Modifier.padding(bottom = 12.dp)) {
             Column(modifier = Modifier.padding(14.dp)) {
                 Text("Active Research", fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 10.dp))
-                listOf("Predictive Healthcare Analytics", "NLP for Education Systems").forEach { r ->
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp)) {
-                        Box(modifier = Modifier.size(6.dp).clip(androidx.compose.foundation.shape.CircleShape).background(Success))
+                for (r in researchOptions) {
+                    val selected = r in selectedResearch
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth().clickable {
+                            selectedResearch = if (selected) selectedResearch - r else selectedResearch + r
+                        }.padding(vertical = 5.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier.size(7.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(if (selected) Success else MaterialTheme.colorScheme.outline)
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(r, fontSize = 13.sp)
+                        Text(r, fontSize = 13.sp, color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -438,7 +485,7 @@ fun FacultyProfile(prefs: com.example.myapplication.data.PreferencesManager, the
         PMCard(modifier = Modifier.padding(bottom = 16.dp)) {
             Column(modifier = Modifier.padding(14.dp)) {
                 Text("Links", fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 10.dp))
-                listOf("LinkedIn", "Google Scholar", "ResearchGate").forEachIndexed { i, l ->
+                for ((i, l) in listOf("LinkedIn", "Google Scholar", "ResearchGate").withIndex()) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.dp)) {
                         Icon(Icons.Default.Link, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(8.dp))

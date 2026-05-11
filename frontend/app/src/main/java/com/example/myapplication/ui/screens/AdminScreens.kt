@@ -49,9 +49,9 @@ fun AdminDashboard(setAdminTab: (String) -> Unit = {}) {
         }
         // Stats grid
         Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 20.dp)) {
-            stats.chunked(2).forEach { row ->
+            for (row in stats.chunked(2)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                    row.forEach { (label, value, color) ->
+                    for ((label, value, color) in row) {
                         PMCard(modifier = Modifier.weight(1f)) {
                             Column(modifier = Modifier.padding(14.dp)) {
                                 Text(label, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
@@ -64,9 +64,10 @@ fun AdminDashboard(setAdminTab: (String) -> Unit = {}) {
         }
         Text("Quick Actions", fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 10.dp))
         Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 20.dp)) {
-            quickActions.chunked(2).forEachIndexed { rowIdx, row ->
+            for ((rowIdx, row) in quickActions.chunked(2).withIndex()) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                    row.forEachIndexed { colIdx, (label, icon, color) ->
+                    for ((colIdx, action) in row.withIndex()) {
+                        val (label, icon, color) = action
                         val route = quickRoutes.getOrElse(rowIdx * 2 + colIdx) { "dashboard" }
                         PMCard(modifier = Modifier.weight(1f), onClick = { setAdminTab(route) }) {
                             Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -84,7 +85,8 @@ fun AdminDashboard(setAdminTab: (String) -> Unit = {}) {
         Text("Submission Progress", fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 10.dp))
         PMCard {
             Column(modifier = Modifier.padding(16.dp)) {
-                listOf(Triple("Review 1 Submissions", 82, MaterialTheme.colorScheme.primary), Triple("Review 2 Submissions", 60, Accent), Triple("Final Submissions", 25, Success)).forEachIndexed { i, (label, pct, color) ->
+                for ((i, item) in listOf(Triple("Review 1 Submissions", 82, MaterialTheme.colorScheme.primary), Triple("Review 2 Submissions", 60, Accent), Triple("Final Submissions", 25, Success)).withIndex()) {
+                    val (label, pct, color) = item
                     Column(modifier = Modifier.padding(bottom = if (i < 2) 14.dp else 0.dp)) {
                         Row(modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text(label, fontSize = 13.sp)
@@ -113,7 +115,7 @@ fun AdminRequests() {
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = 90.dp)) {
         Text("Requests", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 16.dp))
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            requests.forEach { r ->
+            for (r in requests) {
                 PMCard {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
@@ -171,7 +173,7 @@ fun AdminAddSection() {
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = 90.dp)) {
         Text("Add Section", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-            sections.forEach { (key, label, icon) ->
+            for ((key, label, icon) in sections) {
                 val isActive = active == key
                 Column(
                     modifier = Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
@@ -217,30 +219,43 @@ fun AdminAddSection() {
 
 // ─── PROFILE ─────────────────────────────────────────────────────────────────
 @Composable
-fun AdminProfile(prefs: com.example.myapplication.data.PreferencesManager, themeMode: String, onThemeChange: (String) -> Unit, onLogout: () -> Unit) {
+fun AdminProfile(prefs: com.example.myapplication.data.PreferencesManager, themeMode: String, onThemeChange: (String) -> Unit, onLogout: () -> Unit, setAdminTab: (String) -> Unit = {}) {
     val userName = prefs.getActiveName()
     val userEmail = prefs.getActiveEmail()
+    var editMode by remember { mutableStateOf(false) }
+    var editName by remember { mutableStateOf(userName) }
+    var editOrg by remember { mutableStateOf("State University of Technology") }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = 90.dp)) {
         Column(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            PMAvatar(userName, size = 80, color = Warning)
+            PMAvatar(if (editMode) editName else userName, size = 80, color = Warning)
             Spacer(modifier = Modifier.height(12.dp))
-            Text(userName, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
-            Text(userEmail, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("Platform Administrator", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (!editMode) {
+                Text(userName, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+                Text(userEmail, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Platform Administrator", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                PMInput("Display Name", value = editName, onValueChange = { editName = it })
+                Spacer(Modifier.height(8.dp))
+                PMInput("Organization", value = editOrg, onValueChange = { editOrg = it })
+            }
             Spacer(modifier = Modifier.height(8.dp))
             PMBadge("Admin", color = Warning)
         }
         PMCard(modifier = Modifier.padding(bottom = 12.dp)) {
             Column(modifier = Modifier.padding(14.dp)) {
-                Text("Settings", fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 10.dp))
-                listOf(
-                    Pair("Manage Users", Icons.Default.Person),
-                    Pair("System Reports", Icons.Default.BarChart),
-                    Pair("Timeline Config", Icons.Default.Settings),
-                    Pair("Lock Submissions", Icons.Default.Lock)
-                ).forEachIndexed { i, (label, icon) ->
-                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("Quick Navigation", fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 10.dp))
+                for ((i, item) in listOf(
+                    Triple("Manage Users", Icons.Default.Person, "manageusers"),
+                    Triple("System Reports", Icons.Default.BarChart, "reports"),
+                    Triple("Timeline Config", Icons.Default.Settings, "timeline"),
+                    Triple("Lock Submissions", Icons.Default.Lock, "lock")
+                ).withIndex()) {
+                    val (label, icon, route) = item
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable { setAdminTab(route) }.padding(vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(label, fontSize = 13.sp, modifier = Modifier.weight(1f))
@@ -251,11 +266,14 @@ fun AdminProfile(prefs: com.example.myapplication.data.PreferencesManager, theme
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        
         com.example.myapplication.ui.components.PMThemeToggle(themeMode = themeMode, onThemeChange = onThemeChange)
-        
         Spacer(modifier = Modifier.height(8.dp))
-        PMButton("Edit Profile", onClick = {}, variant = "outline", modifier = Modifier.fillMaxWidth())
+        PMButton(
+            if (editMode) "Save Profile" else "Edit Profile",
+            onClick = { editMode = !editMode },
+            variant = if (editMode) "success" else "outline",
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(modifier = Modifier.height(10.dp))
         PMButton("Logout", onClick = onLogout, variant = "danger", modifier = Modifier.fillMaxWidth())
     }

@@ -36,7 +36,7 @@ fun AdminManageUsers() {
         PMInput("Search by name or ID...", value = search, onValueChange = { search = it }, icon = Icons.Default.Search)
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
-            listOf("students", "faculty").forEach { t ->
+            for (t in listOf("students", "faculty")) {
                 val active = activeTab == t
                 Box(modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant).clickable { activeTab = t }.padding(horizontal = 16.dp, vertical = 8.dp)) {
                     Text(t.replaceFirstChar { it.uppercase() }, color = if (active) Color.White else MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
@@ -44,7 +44,7 @@ fun AdminManageUsers() {
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            shown.forEach { u ->
+            for (u in shown) {
                 PMCard {
                     Row(modifier = Modifier.padding(14.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         PMAvatar(u.name, size = 40, color = if (activeTab == "students") MaterialTheme.colorScheme.primary else Accent)
@@ -79,7 +79,7 @@ fun AdminTimeline() {
         Text("Timeline Configuration", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 4.dp))
         Text("Academic Year 2025–26", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 20.dp))
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            phases.forEachIndexed { i, phase ->
+            for ((i, phase) in phases.withIndex()) {
                 PMCard {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -108,7 +108,7 @@ fun AdminTimeline() {
 fun AdminReports() {
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = 90.dp)) {
         Text("System Reports", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 20.dp))
-        listOf(Triple("Review 1 Submissions", 82, MaterialTheme.colorScheme.primary), Triple("Review 2 Submissions", 60, Accent), Triple("Final Submissions", 25, Success)).forEach { (label, pct, color) ->
+        for ((label, pct, color) in listOf(Triple("Review 1 Submissions", 82, MaterialTheme.colorScheme.primary), Triple("Review 2 Submissions", 60, Accent), Triple("Final Submissions", 25, Success))) {
             PMCard(modifier = Modifier.padding(bottom = 12.dp)) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Row(modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) { Text(label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold); Text("$pct%", color = color, fontWeight = FontWeight.Bold) }
@@ -118,9 +118,16 @@ fun AdminReports() {
         }
         Text("Summary Statistics", fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 12.dp))
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            listOf(listOf(Triple("Total Students", "248", MaterialTheme.colorScheme.primary), Triple("Faculty", "32", Accent)), listOf(Triple("Active Projects", "61", Success), Triple("Pending Reviews", "12", Warning)), listOf(Triple("Complaints", "5", Danger), Triple("Resolved", "18", Success))).forEach { row ->
+            for (row in listOf(listOf(Triple("Total Students", "248", MaterialTheme.colorScheme.primary), Triple("Faculty", "32", Accent)), listOf(Triple("Active Projects", "61", Success), Triple("Pending Reviews", "12", Warning)), listOf(Triple("Complaints", "5", Danger), Triple("Resolved", "18", Success)))) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                    row.forEach { (label, value, color) -> PMCard(modifier = Modifier.weight(1f)) { Column(modifier = Modifier.padding(14.dp)) { Text(label, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(value, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = color) } } }
+                    for ((label, value, color) in row) {
+                        PMCard(modifier = Modifier.weight(1f)) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Text(label, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(value, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = color)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -146,7 +153,7 @@ fun AdminLockSubmissions() {
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            windows.forEachIndexed { i, w ->
+            for ((i, w) in windows.withIndex()) {
                 PMCard {
                     Row(modifier = Modifier.padding(14.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Icon(if (w.isOpen) Icons.Default.LockOpen else Icons.Default.Lock, null, tint = if (w.isOpen) Success else Danger, modifier = Modifier.size(20.dp))
@@ -175,12 +182,17 @@ fun AdminComplaints() {
         Text("Complaints & Help Desk", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 4.dp))
         Text("User-reported issues and app crashes", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-            listOf(Triple("Open", complaints.count { it.status == "open" }.toString(), Danger), Triple("In Progress", complaints.count { it.status == "in-progress" }.toString(), Warning), Triple("Resolved", complaints.count { it.status == "resolved" }.toString(), Success)).forEach { (l, v, c) ->
-                PMCard(modifier = Modifier.weight(1f)) { Column(modifier = Modifier.padding(12.dp)) { Text(l, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(v, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = c) } }
+            for ((l, v, c) in listOf(Triple("Open", complaints.count { it.status == "open" }.toString(), Danger), Triple("In Progress", complaints.count { it.status == "in-progress" }.toString(), Warning), Triple("Resolved", complaints.count { it.status == "resolved" }.toString(), Success))) {
+                PMCard(modifier = Modifier.weight(1f)) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(l, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(v, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = c)
+                    }
+                }
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            complaints.forEach { c ->
+            for (c in complaints) {
                 val statusColor = when (c.status) { "resolved" -> Success; "in-progress" -> Warning; else -> Danger }
                 PMCard {
                     Column(modifier = Modifier.padding(14.dp)) {
@@ -219,9 +231,9 @@ fun AdminNotificationForm() {
                     Column {
                         Text("Target Audience", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            roles.chunked(2).forEach { row ->
+                            for (row in roles.chunked(2)) {
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    row.forEach { r ->
+                                    for (r in row) {
                                         Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(if (targetRole == r) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant).clickable { targetRole = r }.padding(10.dp), contentAlignment = Alignment.Center) {
                                             Text(r, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = if (targetRole == r) Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
                                         }

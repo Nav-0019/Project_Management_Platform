@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,7 +41,7 @@ fun StudentScorecard() {
         Text("Faculty Scorecard", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 16.dp))
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
-            listOf("marks", "reviews", "feedback").forEach { t ->
+            for (t in listOf("marks", "reviews", "feedback")) {
                 val isActive = activeTab == t
                 Box(
                     modifier = Modifier
@@ -68,7 +69,7 @@ fun StudentScorecard() {
                     }
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    reviews.forEach { r ->
+                    for (r in reviews) {
                         PMCard {
                             Column(modifier = Modifier.padding(14.dp)) {
                                 Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -84,9 +85,9 @@ fun StudentScorecard() {
                                     }
                                 }
                                 Text("${r["date"]} · ${r["faculty"]}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                val obtained = r["obtained"]
-                                if (obtained != null) {
-                                    val pct = ((obtained as Int).toFloat() / (r["max"] as Int).toFloat() * 100).toInt()
+                                val ob2 = r["obtained"]
+                                if (ob2 != null) {
+                                    val pct = ((ob2 as Int).toFloat() / (r["max"] as Int).toFloat() * 100).toInt()
                                     Spacer(modifier = Modifier.height(8.dp))
                                     PMProgressBar(pct, Success)
                                 }
@@ -97,7 +98,7 @@ fun StudentScorecard() {
             }
             "reviews" -> {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    reviews.filter { it["obtained"] != null }.forEach { r ->
+                    for (r in reviews.filter { it["obtained"] != null }) {
                         PMCard {
                             Column(modifier = Modifier.padding(14.dp)) {
                                 Text("Review ${r["no"]}", fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(bottom = 4.dp))
@@ -114,7 +115,7 @@ fun StudentScorecard() {
                 PMCard {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text("Overall Feedback", fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(bottom = 12.dp))
-                        listOf(Pair("Research Quality", 85), Pair("Documentation", 72), Pair("Presentation", 90), Pair("Innovation", 78)).forEach { f ->
+                        for (f in listOf(Pair("Research Quality", 85), Pair("Documentation", 72), Pair("Presentation", 90), Pair("Innovation", 78))) {
                             Column(modifier = Modifier.padding(bottom = 10.dp)) {
                                 Row(modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                                     Text(f.first, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -149,10 +150,10 @@ fun StudentResources() {
         Text("Resources", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 16.dp))
         PMInput("Search resources...", value = search, onValueChange = { search = it })
         Spacer(modifier = Modifier.height(16.dp))
-        categories.forEach { cat ->
+        for (cat in categories) {
             Text(cat.uppercase(), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp, modifier = Modifier.padding(bottom = 8.dp))
             Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 20.dp)) {
-                filtered.filter { it["category"] == cat }.forEach { r ->
+                for (r in filtered.filter { it["category"] == cat }) {
                     val type = r["type"] as String
                     val color = when (type) { "pdf" -> Danger; "pptx" -> Warning; else -> MaterialTheme.colorScheme.primary }
                     PMCard {
@@ -167,8 +168,8 @@ fun StudentResources() {
                                 }
                             }
                             var downloaded by remember { mutableStateOf(false) }
-                            Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(if(downloaded) com.example.myapplication.ui.theme.Success.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)).clickable { downloaded = true }.padding(8.dp)) {
-                                Icon(if(downloaded) Icons.Default.CheckCircle else Icons.Default.Download, contentDescription = null, tint = if(downloaded) com.example.myapplication.ui.theme.Success else MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                            Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(if(downloaded) Success.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)).clickable { downloaded = true }.padding(8.dp)) {
+                                Icon(if(downloaded) Icons.Default.CheckCircle else Icons.Default.Download, contentDescription = null, tint = if(downloaded) Success else MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                             }
                         }
                     }
@@ -216,7 +217,7 @@ fun StudentProfile(prefs: com.example.myapplication.data.PreferencesManager, the
         Text("PERSONAL INFORMATION", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp, modifier = Modifier.padding(bottom = 8.dp))
         PMCard(modifier = Modifier.padding(bottom = 14.dp)) {
             Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                listOf(Triple("Email", userEmail, Icons.Default.Email), Triple("Roll No", rollNo, Icons.Default.Badge), Triple("Department", dept, Icons.Default.School)).forEach { (label, value, icon) ->
+                for ((label, value, icon) in listOf(Triple("Email", userEmail, Icons.Default.Email), Triple("Roll No", rollNo, Icons.Default.Badge), Triple("Department", dept, Icons.Default.School))) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(34.dp).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) { Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp)) }
                         Spacer(Modifier.width(10.dp))
@@ -234,7 +235,7 @@ fun StudentProfile(prefs: com.example.myapplication.data.PreferencesManager, the
         Text("ACADEMIC PROFILE", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp, modifier = Modifier.padding(bottom = 8.dp))
         PMCard(modifier = Modifier.padding(bottom = 14.dp)) {
             Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                listOf(Triple("University", "State University of Technology", Icons.Default.AccountBalance), Triple("Degree", "MCA — Master of Computer Applications", Icons.Default.School), Triple("Year / Semester", "3rd Year, 6th Semester", Icons.Default.CalendarToday)).forEach { (label, value, icon) ->
+                for ((label, value, icon) in listOf(Triple("University", "State University of Technology", Icons.Default.AccountBalance), Triple("Degree", "MCA — Master of Computer Applications", Icons.Default.School), Triple("Year / Semester", "3rd Year, 6th Semester", Icons.Default.CalendarToday))) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(34.dp).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) { Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp)) }
                         Spacer(Modifier.width(10.dp))
@@ -262,12 +263,12 @@ fun StudentProfile(prefs: com.example.myapplication.data.PreferencesManager, the
         PMCard(modifier = Modifier.padding(bottom = 14.dp)) {
             Column(modifier = Modifier.padding(14.dp)) {
                 Text("Skills & Technologies", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 8.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) { skills.take(3).forEach { PMBadge(it, color = MaterialTheme.colorScheme.primary) } }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) { for (s in skills.take(3)) PMBadge(s, color = MaterialTheme.colorScheme.primary) }
                 Spacer(Modifier.height(4.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) { skills.drop(3).forEach { PMBadge(it, color = MaterialTheme.colorScheme.primary) } }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) { for (s in skills.drop(3)) PMBadge(s, color = MaterialTheme.colorScheme.primary) }
                 Spacer(Modifier.height(10.dp))
                 Text("Team Roles", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 8.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf("Frontend Dev", "AI Engineer", "PM").forEach { PMBadge(it, color = com.example.myapplication.ui.theme.Accent) } }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) { for (r in listOf("Frontend Dev", "AI Engineer", "PM")) PMBadge(r, color = Accent) }
             }
         }
         // Section 4 — Social Links
@@ -275,7 +276,7 @@ fun StudentProfile(prefs: com.example.myapplication.data.PreferencesManager, the
         PMCard(modifier = Modifier.padding(bottom = 14.dp)) {
             Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (!editMode) {
-                    listOf("GitHub" to github, "LinkedIn" to linkedin, "Portfolio" to "portfolio.dev/user").forEach { (label, url) ->
+                    for ((label, url) in listOf("GitHub" to github, "LinkedIn" to linkedin, "Portfolio" to "portfolio.dev/user")) {
                         Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Default.Link, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(8.dp)); Column { Text(label, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(url, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary) } }
                     }
                 } else {
@@ -284,15 +285,30 @@ fun StudentProfile(prefs: com.example.myapplication.data.PreferencesManager, the
                 }
             }
         }
-        // Section 5 — Collaboration Settings
-        Text("COLLABORATION SETTINGS", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp, modifier = Modifier.padding(bottom = 8.dp))
+        // Section 5 — Project Portfolio
+        Text("PROJECT PORTFOLIO", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp, modifier = Modifier.padding(bottom = 8.dp))
         PMCard(modifier = Modifier.padding(bottom = 14.dp)) {
-            Column(modifier = Modifier.padding(14.dp)) {
-                listOf("Looking for Teammates" to lookingForTeam, "Open to Joining Projects" to openToJoin, "Open for Mentorship" to openMentorship, "Looking for Internship" to internship, "Interested in Hackathons" to hackathons).forEachIndexed { i, (label, checked) ->
-                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(label, fontSize = 13.sp, modifier = Modifier.weight(1f))
-                        Switch(checked = checked, onCheckedChange = { v -> when(i){ 0->lookingForTeam=v; 1->openToJoin=v; 2->openMentorship=v; 3->internship=v; else->hackathons=v } })
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                for ((proj, stack, status) in listOf(
+                    Triple("AI-Based Medical Diagnosis", "Python · TensorFlow · Flask", "In Progress"),
+                    Triple("E-commerce Chatbot", "Node.js · React · OpenAI", "Completed")
+                )) {
+                    Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceVariant).padding(12.dp)) {
+                        Column {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(proj, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                                PMBadge(status, color = if (status == "Completed") Success else Accent)
+                            }
+                            Text(stack, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 8.dp)) {
+                                PMBadge("GitHub", color = MaterialTheme.colorScheme.primary)
+                                PMBadge("Live Demo", color = Accent)
+                            }
+                        }
                     }
+                }
+                if (editMode) {
+                    PMButton("+ Add Project", onClick = {}, variant = "outline", modifier = Modifier.fillMaxWidth())
                 }
             }
         }
@@ -338,7 +354,7 @@ fun StudentFindGuide(onBack: () -> Unit) {
         PMInput("Search faculty by name or domain", value = search, onValueChange = { search = it }, icon = Icons.Default.Search)
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            tags.forEach { t ->
+            for (t in tags) {
                 val isActive = activeTag == t
                 Box(modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant).clickable { activeTag = t }.padding(horizontal = 14.dp, vertical = 6.dp)) {
                     Text(t, color = if (isActive) Color.White else MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
@@ -346,7 +362,7 @@ fun StudentFindGuide(onBack: () -> Unit) {
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            filtered.forEach { f ->
+            for (f in filtered) {
                 PMCard {
                     Row(modifier = Modifier.padding(14.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         PMAvatar(f["name"] as String, size = 44, color = MaterialTheme.colorScheme.primary)
@@ -390,14 +406,16 @@ private fun FacultyDetailView(faculty: Map<String, Any>, onBack: () -> Unit) {
             Column(modifier = Modifier.padding(14.dp)) {
                 Text("Research Interests", fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.padding(bottom = 10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("Machine Learning", "Deep Learning", "NLP").forEach { PMBadge(it, color = MaterialTheme.colorScheme.primary) }
+                    for (tag in listOf("Machine Learning", "Deep Learning", "NLP")) {
+                        PMBadge(tag, color = MaterialTheme.colorScheme.primary)
+                    }
                 }
             }
         }
         PMCard(modifier = Modifier.padding(bottom = 14.dp)) {
             Column(modifier = Modifier.padding(14.dp)) {
                 Text("Publications", fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.padding(bottom = 10.dp))
-                pubs.forEachIndexed { i, p ->
+                for ((i, p) in pubs.withIndex()) {
                     Row(modifier = Modifier.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Description, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp).padding(end = 6.dp))
                         Text(p, fontSize = 12.sp, modifier = Modifier.weight(1f))

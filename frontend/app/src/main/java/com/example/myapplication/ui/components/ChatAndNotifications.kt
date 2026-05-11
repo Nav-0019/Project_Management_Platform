@@ -195,7 +195,9 @@ fun NotificationPanel(onClose: () -> Unit) {
                 }
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-            notifs.forEach { (text, time, pair) ->
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+            for (notif in notifs) {
+                val (text, time, pair) = notif
                 val (color, icon) = pair
                 Row(modifier = Modifier.fillMaxWidth().clickable {}.padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(color.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
@@ -235,18 +237,6 @@ fun NotificationsPage() {
     val filtered = if (activeFilter == "all") notifs else notifs.filter { it.type == activeFilter }
     val unreadCount = notifs.count { !it.isRead }
 
-    val typeColor: (String) -> Color = { type ->
-        when (type) {
-            "review" -> Success
-            "deadline" -> Danger
-            "team" -> Color(0xFF6366F1)
-            "guide" -> Accent
-            "announcement" -> Warning
-            "admin" -> Warning
-            else -> MaterialTheme.colorScheme.primary
-        }
-    }
-
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = 90.dp)) {
         Row(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column {
@@ -264,7 +254,7 @@ fun NotificationsPage() {
 
         // Filter chips
         Row(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            filters.forEach { f ->
+            for (f in filters) {
                 val isActive = activeFilter == f
                 Box(modifier = Modifier.clip(RoundedCornerShape(20.dp))
                     .background(if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
@@ -276,8 +266,16 @@ fun NotificationsPage() {
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            filtered.forEach { notif ->
-                val color = typeColor(notif.type)
+            for (notif in filtered) {
+                val color = when (notif.type) {
+                    "review" -> Success
+                    "deadline" -> Danger
+                    "team" -> Color(0xFF6366F1)
+                    "guide" -> Accent
+                    "announcement" -> Warning
+                    "admin" -> Warning
+                    else -> MaterialTheme.colorScheme.primary
+                }
                 PMCard {
                     Row(modifier = Modifier.padding(14.dp).fillMaxWidth(), verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Box(modifier = Modifier.size(42.dp).clip(RoundedCornerShape(12.dp)).background(color.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {

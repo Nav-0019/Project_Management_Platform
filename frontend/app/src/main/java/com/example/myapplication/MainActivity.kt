@@ -166,7 +166,7 @@ fun App(prefs: PreferencesManager, themeMode: String, onThemeChange: (String) ->
                             "lock" -> AdminLockSubmissions()
                             "complaints" -> AdminComplaints()
                             "notify" -> AdminNotificationForm()
-                            "profile" -> AdminProfile(prefs = prefs, themeMode = themeMode, onThemeChange = onThemeChange, onLogout = { prefs.clear(); role = "student"; projectMode = ""; activeTab = "home"; screen = "auth" })
+                            "profile" -> AdminProfile(prefs = prefs, themeMode = themeMode, onThemeChange = onThemeChange, setAdminTab = { activeTab = it }, onLogout = { prefs.clear(); role = "student"; projectMode = ""; activeTab = "home"; screen = "auth" })
                             else -> AdminDashboard(setAdminTab = { activeTab = it })
                         }
                     }
