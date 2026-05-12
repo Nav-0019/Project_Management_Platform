@@ -31,11 +31,7 @@ import com.example.myapplication.ui.theme.*
 @Composable
 fun StudentScorecard() {
     var activeTab by remember { mutableStateOf("marks") }
-    val reviews = listOf(
-        mapOf("no" to "1", "date" to "20 Apr 2026", "max" to 25, "obtained" to 22, "faculty" to "Dr. Anand Kumar", "remarks" to "Good progress. Work on the UI design."),
-        mapOf("no" to "2", "date" to "5 May 2026", "max" to 25, "obtained" to 23, "faculty" to "Dr. Lisa Wong", "remarks" to "Excellent data analysis. Improve documentation."),
-        mapOf("no" to "Final", "date" to "5 Jun 2026", "max" to 50, "obtained" to null, "faculty" to "Panel", "remarks" to "Upcoming")
-    )
+    val reviews = emptyList<Map<String, Any?>>()
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = 90.dp)) {
         Text("Faculty Scorecard", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 16.dp))
@@ -61,11 +57,11 @@ fun StudentScorecard() {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text("Current Score", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                         Row(verticalAlignment = Alignment.Bottom) {
-                            Text("45", fontSize = 40.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
-                            Text("/50", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+                            Text("0", fontSize = 40.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
+                            Text("/0", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
                         }
-                        PMProgressBar(90, MaterialTheme.colorScheme.primary)
-                        Text("90% — Excellent", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+                        PMProgressBar(0, MaterialTheme.colorScheme.primary)
+                        Text("No scores yet", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
                     }
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -115,13 +111,18 @@ fun StudentScorecard() {
                 PMCard {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text("Overall Feedback", fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(bottom = 12.dp))
-                        for (f in listOf(Pair("Research Quality", 85), Pair("Documentation", 72), Pair("Presentation", 90), Pair("Innovation", 78))) {
-                            Column(modifier = Modifier.padding(bottom = 10.dp)) {
-                                Row(modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text(f.first, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text("${f.second}%", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        val feedbackData = emptyList<Pair<String, Int>>()
+                        if (feedbackData.isEmpty()) {
+                            PMEmptyState("📝", "No Feedback", "You have not received any feedback yet.")
+                        } else {
+                            for (f in feedbackData) {
+                                Column(modifier = Modifier.padding(bottom = 10.dp)) {
+                                    Row(modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text(f.first, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text("${f.second}%", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                    PMProgressBar(f.second, MaterialTheme.colorScheme.primary)
                                 }
-                                PMProgressBar(f.second, MaterialTheme.colorScheme.primary)
                             }
                         }
                     }
@@ -135,14 +136,7 @@ fun StudentScorecard() {
 @Composable
 fun StudentResources() {
     var search by remember { mutableStateOf("") }
-    val allResources = listOf(
-        mapOf("name" to "Project Guidelines PDF", "size" to "1.2 MB", "type" to "pdf", "category" to "Circulars"),
-        mapOf("name" to "Research Paper Format", "size" to "320 KB", "type" to "docx", "category" to "Circulars"),
-        mapOf("name" to "Review 1 Template PPT", "size" to "570 KB", "type" to "pptx", "category" to "Templates"),
-        mapOf("name" to "Review 2 Template PPT", "size" to "640 KB", "type" to "pptx", "category" to "Templates"),
-        mapOf("name" to "Review 1 Submission PPT", "size" to "2.2 MB", "type" to "pptx", "category" to "Submissions"),
-        mapOf("name" to "Review 2 Submission PPT", "size" to "5.1 MB", "type" to "pptx", "category" to "Submissions")
-    )
+    val allResources = emptyList<Map<String, Any>>()
     val filtered = allResources.filter { (it["name"] as String).contains(search, true) }
     val categories = filtered.map { it["category"] as String }.distinct()
 
@@ -150,26 +144,32 @@ fun StudentResources() {
         Text("Resources", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 16.dp))
         PMInput("Search resources...", value = search, onValueChange = { search = it })
         Spacer(modifier = Modifier.height(16.dp))
-        for (cat in categories) {
-            Text(cat.uppercase(), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp, modifier = Modifier.padding(bottom = 8.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 20.dp)) {
-                for (r in filtered.filter { it["category"] == cat }) {
-                    val type = r["type"] as String
-                    val color = when (type) { "pdf" -> Danger; "pptx" -> Warning; else -> MaterialTheme.colorScheme.primary }
-                    PMCard {
-                        Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                Box(modifier = Modifier.size(38.dp).clip(RoundedCornerShape(8.dp)).background(color.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
-                                    Icon(Icons.Default.Description, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+        if (filtered.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                PMEmptyState("📁", "No Resources", "No resources match your search or none have been uploaded yet.")
+            }
+        } else {
+            for (cat in categories) {
+                Text(cat.uppercase(), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp, modifier = Modifier.padding(bottom = 8.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 20.dp)) {
+                    for (r in filtered.filter { it["category"] == cat }) {
+                        val type = r["type"] as String
+                        val color = when (type) { "pdf" -> Danger; "pptx" -> Warning; else -> MaterialTheme.colorScheme.primary }
+                        PMCard {
+                            Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Box(modifier = Modifier.size(38.dp).clip(RoundedCornerShape(8.dp)).background(color.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
+                                        Icon(Icons.Default.Description, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+                                    }
+                                    Column {
+                                        Text(r["name"] as String, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                                        Text(r["size"] as String, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
                                 }
-                                Column {
-                                    Text(r["name"] as String, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                                    Text(r["size"] as String, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                var downloaded by remember { mutableStateOf(false) }
+                                Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(if(downloaded) Success.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)).clickable { downloaded = true }.padding(8.dp)) {
+                                    Icon(if(downloaded) Icons.Default.CheckCircle else Icons.Default.Download, contentDescription = null, tint = if(downloaded) Success else MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                                 }
-                            }
-                            var downloaded by remember { mutableStateOf(false) }
-                            Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(if(downloaded) Success.copy(alpha = 0.1f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)).clickable { downloaded = true }.padding(8.dp)) {
-                                Icon(if(downloaded) Icons.Default.CheckCircle else Icons.Default.Download, contentDescription = null, tint = if(downloaded) Success else MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                             }
                         }
                     }
@@ -181,23 +181,23 @@ fun StudentResources() {
 
 // ─── PROFILE ─────────────────────────────────────────────────────────────────
 @Composable
-fun StudentProfile(prefs: com.example.myapplication.data.PreferencesManager, themeMode: String, onThemeChange: (String) -> Unit, onLogout: () -> Unit) {
+fun StudentProfile(prefs: com.example.myapplication.data.PreferencesManager, themeMode: String, onThemeChange: (String) -> Unit, onLogout: () -> Unit, onOpenSettings: () -> Unit = {}) {
     val userName = prefs.getActiveName()
     val userEmail = prefs.getActiveEmail()
     val rollNo = prefs.getActiveId()
     val dept = prefs.getActiveDept()
     var editMode by remember { mutableStateOf(false) }
-    var headline by remember { mutableStateOf("Passionate developer | AI enthusiast") }
-    var aboutMe by remember { mutableStateOf("Final year MCA student focused on AI/ML and full-stack development.") }
-    var cgpa by remember { mutableStateOf("8.7") }
-    var github by remember { mutableStateOf("github.com/user") }
-    var linkedin by remember { mutableStateOf("linkedin.com/in/user") }
+    var headline by remember { mutableStateOf(prefs.getProfileHeadline()) }
+    var aboutMe by remember { mutableStateOf(prefs.getProfileAboutMe()) }
+    var cgpa by remember { mutableStateOf(prefs.getProfileCgpa()) }
+    var github by remember { mutableStateOf(prefs.getProfileGithub()) }
+    var linkedin by remember { mutableStateOf(prefs.getProfileLinkedin()) }
     var lookingForTeam by remember { mutableStateOf(true) }
     var openToJoin by remember { mutableStateOf(true) }
     var openMentorship by remember { mutableStateOf(false) }
     var internship by remember { mutableStateOf(true) }
     var hackathons by remember { mutableStateOf(true) }
-    val skills = listOf("Python", "Kotlin", "TensorFlow", "React", "Node.js", "SQL")
+    val skills = emptyList<String>()
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = 90.dp)) {
         // Header
@@ -205,7 +205,7 @@ fun StudentProfile(prefs: com.example.myapplication.data.PreferencesManager, the
             PMAvatar(userName, size = 84, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(12.dp))
             Text(userName, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
-            if (!editMode) Text(headline, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+            if (!editMode) Text(if (headline.isEmpty()) "Add a professional headline" else headline, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
             else { Spacer(Modifier.height(4.dp)); PMInput("Professional headline", value = headline, onValueChange = { headline = it }) }
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -226,7 +226,7 @@ fun StudentProfile(prefs: com.example.myapplication.data.PreferencesManager, the
                 }
                 Column {
                     Text("About Me", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 4.dp))
-                    if (!editMode) Text(aboutMe, fontSize = 13.sp)
+                    if (!editMode) Text(if (aboutMe.isEmpty()) "Tell us about yourself..." else aboutMe, fontSize = 13.sp, color = if (aboutMe.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha=0.6f) else MaterialTheme.colorScheme.onSurface)
                     else PMInput("About you...", value = aboutMe, onValueChange = { aboutMe = it }, singleLine = false)
                 }
             }
@@ -247,7 +247,7 @@ fun StudentProfile(prefs: com.example.myapplication.data.PreferencesManager, the
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
                         Text("CGPA", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        if (!editMode) Text(cgpa, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                        if (!editMode) Text(if(cgpa.isEmpty()) "Not set" else cgpa, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                         else PMInput("Your CGPA", value = cgpa, onValueChange = { cgpa = it })
                     }
                 }
@@ -289,20 +289,22 @@ fun StudentProfile(prefs: com.example.myapplication.data.PreferencesManager, the
         Text("PROJECT PORTFOLIO", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp, modifier = Modifier.padding(bottom = 8.dp))
         PMCard(modifier = Modifier.padding(bottom = 14.dp)) {
             Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                for ((proj, stack, status) in listOf(
-                    Triple("AI-Based Medical Diagnosis", "Python · TensorFlow · Flask", "In Progress"),
-                    Triple("E-commerce Chatbot", "Node.js · React · OpenAI", "Completed")
-                )) {
-                    Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceVariant).padding(12.dp)) {
-                        Column {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text(proj, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, modifier = Modifier.weight(1f))
-                                PMBadge(status, color = if (status == "Completed") Success else Accent)
-                            }
-                            Text(stack, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 8.dp)) {
-                                PMBadge("GitHub", color = MaterialTheme.colorScheme.primary)
-                                PMBadge("Live Demo", color = Accent)
+                val userProjects = emptyList<Triple<String, String, String>>()
+                if (userProjects.isEmpty()) {
+                    PMEmptyState("🚀", "No Projects", "You have not uploaded any portfolio projects yet.")
+                } else {
+                    for ((proj, stack, status) in userProjects) {
+                        Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceVariant).padding(12.dp)) {
+                            Column {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text(proj, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                                    PMBadge(status, color = if (status == "Completed") Success else Accent)
+                                }
+                                Text(stack, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 8.dp)) {
+                                    PMBadge("GitHub", color = MaterialTheme.colorScheme.primary)
+                                    PMBadge("Live Demo", color = Accent)
+                                }
                             }
                         }
                     }
@@ -312,9 +314,36 @@ fun StudentProfile(prefs: com.example.myapplication.data.PreferencesManager, the
                 }
             }
         }
-        PMThemeToggle(themeMode = themeMode, onThemeChange = onThemeChange)
-        Spacer(Modifier.height(8.dp))
-        PMButton(if (editMode) "Save Profile" else "Edit Profile", onClick = { editMode = !editMode }, variant = if (editMode) "success" else "outline", modifier = Modifier.fillMaxWidth())
+        // Section 6 — Settings Link
+        Text("ACCOUNT", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp, modifier = Modifier.padding(bottom = 8.dp))
+        PMCard(modifier = Modifier.padding(bottom = 10.dp)) {
+            Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                for ((label, icon, color) in listOf(
+                    Triple("Settings", Icons.Default.Settings, MaterialTheme.colorScheme.onSurfaceVariant),
+                    Triple("Help & Support", Icons.Default.HelpOutline, MaterialTheme.colorScheme.onSurfaceVariant)
+                )) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable { if (label == "Settings") onOpenSettings() }.padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
+                            Icon(icon, null, tint = color, modifier = Modifier.size(16.dp))
+                        }
+                        Text(label, fontSize = 13.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                        Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                    }
+                    Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline.copy(0.4f)))
+                }
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        PMButton(if (editMode) "Save Profile" else "Edit Profile", onClick = { 
+            if (editMode) {
+                prefs.saveProfileDetails(headline, aboutMe, cgpa, github, linkedin)
+            }
+            editMode = !editMode 
+        }, variant = if (editMode) "success" else "outline", modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(10.dp))
         PMButton("Logout", onClick = onLogout, variant = "danger", modifier = Modifier.fillMaxWidth())
     }

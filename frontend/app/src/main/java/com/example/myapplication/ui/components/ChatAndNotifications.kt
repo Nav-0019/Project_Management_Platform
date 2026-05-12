@@ -5,14 +5,14 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Assignment
-import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -176,41 +176,43 @@ fun GroupChatPanel(onClose: () -> Unit) {
 
 // ─── NOTIFICATION PANEL (overlay) ────────────────────────────────────────────
 @Composable
-fun NotificationPanel(onClose: () -> Unit) {
-    val notifs = listOf(
-        Triple("New submission from Vijay Shah", "2m ago", MaterialTheme.colorScheme.primary to Icons.Default.Description),
-        Triple("Review deadline: AI-Based Medical Diagnosis", "1h ago", Warning to Icons.Default.Notifications),
-        Triple("Admin approved your account", "2h ago", Success to Icons.AutoMirrored.Filled.Assignment),
-        Triple("Guide request from Priya Agarwal", "3h ago", Accent to Icons.AutoMirrored.Filled.Assignment)
-    )
+fun NotificationPanel(onClose: () -> Unit, onViewAll: () -> Unit) {
+    val notifs = emptyList<Triple<String, String, Pair<androidx.compose.ui.graphics.Color, androidx.compose.ui.graphics.vector.ImageVector>>>()
     PMCard(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         Column {
             Row(modifier = Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("Notifications", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    PMBadge("4 new", color = MaterialTheme.colorScheme.primary)
+                    if (notifs.isNotEmpty()) {
+                        PMBadge("${notifs.size} new", color = MaterialTheme.colorScheme.primary)
+                    }
                     IconButton(onClick = onClose, modifier = Modifier.size(20.dp)) {
                         Icon(Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
                     }
                 }
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-            for (notif in notifs) {
-                val (text, time, pair) = notif
-                val (color, icon) = pair
-                Row(modifier = Modifier.fillMaxWidth().clickable {}.padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(color.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
-                        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
-                    }
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(text, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                        Text(time, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp))
-                    }
+            if (notifs.isEmpty()) {
+                Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    Text("No new notifications", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+            } else {
+                for (notif in notifs) {
+                    val (text, time, pair) = notif
+                    val (color, icon) = pair
+                    Row(modifier = Modifier.fillMaxWidth().clickable {}.padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(color.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
+                            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(text, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            Text(time, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp))
+                        }
+                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+                }
             }
-            Box(modifier = Modifier.fillMaxWidth().clickable {}.padding(12.dp), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.fillMaxWidth().clickable { onViewAll() }.padding(12.dp), contentAlignment = Alignment.Center) {
                 Text("View all notifications", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
             }
         }
@@ -221,82 +223,181 @@ fun NotificationPanel(onClose: () -> Unit) {
 @Composable
 fun NotificationsPage() {
     data class Notif(val id: Int, val title: String, val body: String, val time: String, val type: String, val isRead: Boolean)
+    data class FilterDef(val id: String, val label: String, val emoji: String, val types: List<String>)
+
     var activeFilter by remember { mutableStateOf("all") }
     var notifs by remember {
-        mutableStateOf(listOf(
-            Notif(1, "Review Feedback Received", "Dr. Anand Kumar submitted Review 1 marks: 22/25", "2m ago", "review", false),
-            Notif(2, "Submission Deadline", "Final report for AI Medical Diagnosis due in 3 days", "1h ago", "deadline", false),
-            Notif(3, "Team Update", "Rahul Verma updated task: Build Backend → Completed", "2h ago", "team", false),
-            Notif(4, "Guide Request Accepted", "Dr. Lisa Wong accepted your mentorship request", "3h ago", "guide", true),
-            Notif(5, "New Announcement", "Faculty: Review 2 template uploaded in Resources", "5h ago", "announcement", true),
-            Notif(6, "Admin Notice", "Submission window opens June 1, 2026", "1d ago", "admin", true),
-            Notif(7, "Project Approved", "Your team project has been officially registered", "2d ago", "project", true)
-        ))
+        mutableStateOf(emptyList<Notif>())
     }
-    val filters = listOf("all", "review", "team", "deadline", "announcement")
-    val filtered = if (activeFilter == "all") notifs else notifs.filter { it.type == activeFilter }
+
+    val filters = listOf(
+        FilterDef("all",          "All",           "🔔", emptyList()),
+        FilterDef("unread",       "Unread",         "●",  emptyList()),
+        FilterDef("mention",      "Mentions",       "@",  listOf("mention")),
+        FilterDef("task",         "Tasks",          "📋", listOf("task")),
+        FilterDef("announcement", "Announcements",  "📢", listOf("announcement")),
+        FilterDef("review",       "Reviews",        "⭐", listOf("review")),
+        FilterDef("team",         "Team",           "👥", listOf("team"))
+    )
+
+    val filtered = when (activeFilter) {
+        "all"    -> notifs
+        "unread" -> notifs.filter { !it.isRead }
+        else     -> notifs.filter { n -> filters.find { it.id == activeFilter }?.types?.contains(n.type) == true }
+    }
     val unreadCount = notifs.count { !it.isRead }
 
-    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = 90.dp)) {
-        Row(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+    Column(modifier = Modifier.fillMaxSize().padding(bottom = 90.dp)) {
+        // Header
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Column {
                 Text("Notifications", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
-                if (unreadCount > 0) Text("$unreadCount unread", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                if (unreadCount > 0)
+                    Text("$unreadCount unread", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                else
+                    Text("All caught up!", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (unreadCount > 0) {
-                Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)).clickable {
-                    notifs = notifs.map { it.copy(isRead = true) }
-                }.padding(horizontal = 12.dp, vertical = 6.dp)) {
-                    Text("Mark all read", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (unreadCount > 0) {
+                    Box(
+                        modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                            .clickable { notifs = notifs.map { it.copy(isRead = true) } }
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                    ) { Text("Mark all read", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold) }
                 }
+                Box(
+                    modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                        .background(Danger.copy(alpha = 0.1f))
+                        .clickable { notifs = emptyList() }
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) { Text("Clear all", fontSize = 11.sp, color = Danger, fontWeight = FontWeight.SemiBold) }
             }
         }
 
-        // Filter chips
-        Row(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            for (f in filters) {
-                val isActive = activeFilter == f
-                Box(modifier = Modifier.clip(RoundedCornerShape(20.dp))
-                    .background(if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
-                    .clickable { activeFilter = f }.padding(horizontal = 14.dp, vertical = 7.dp)) {
-                    Text(f.replaceFirstChar { it.uppercase() }, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+        // Scrollable filter chips — no overflow
+        LazyRow(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(filters) { f ->
+                val isActive = activeFilter == f.id
+                val count = when (f.id) {
+                    "unread" -> notifs.count { !it.isRead }
+                    "all"    -> notifs.size
+                    else     -> notifs.count { n -> f.types.contains(n.type) }
+                }
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable { activeFilter = f.id }
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Text(f.emoji, fontSize = 12.sp)
+                    Text(f.label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
                         color = if (isActive) Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (count > 0 && !isActive) {
+                        Box(modifier = Modifier.clip(CircleShape).background(MaterialTheme.colorScheme.primary).padding(horizontal = 5.dp, vertical = 1.dp)) {
+                            Text("$count", fontSize = 10.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            for (notif in filtered) {
-                val color = when (notif.type) {
-                    "review" -> Success
-                    "deadline" -> Danger
-                    "team" -> Color(0xFF6366F1)
-                    "guide" -> Accent
-                    "announcement" -> Warning
-                    "admin" -> Warning
-                    else -> MaterialTheme.colorScheme.primary
-                }
-                PMCard {
-                    Row(modifier = Modifier.padding(14.dp).fillMaxWidth(), verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Box(modifier = Modifier.size(42.dp).clip(RoundedCornerShape(12.dp)).background(color.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
-                            Icon(
-                                when (notif.type) {
-                                    "review" -> Icons.Default.Star
-                                    "deadline" -> Icons.Default.Schedule
-                                    "team" -> Icons.Default.Groups
-                                    "guide" -> Icons.Default.Person
-                                    "announcement" -> Icons.Default.Campaign
-                                    else -> Icons.Default.Notifications
-                                }, contentDescription = null, tint = color, modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text(notif.title, fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.weight(1f))
-                                if (!notif.isRead) Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))
+        // List or empty state
+        if (filtered.isEmpty()) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                PMEmptyState(
+                    emoji = "🔔",
+                    title = "No notifications",
+                    subtitle = when (activeFilter) {
+                        "unread"       -> "You're all caught up!"
+                        "mention"      -> "No one has mentioned you yet."
+                        "task"         -> "No task or deadline notifications."
+                        "announcement" -> "No announcements at this time."
+                        "review"       -> "No review notifications yet."
+                        "team"         -> "No team activity yet."
+                        else           -> "Your notifications will appear here."
+                    }
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(filtered, key = { it.id }) { notif ->
+                    val color = when (notif.type) {
+                        "review"       -> Success
+                        "task"         -> Danger
+                        "team"         -> Color(0xFF6366F1)
+                        "mention"      -> Accent
+                        "announcement" -> Warning
+                        else           -> MaterialTheme.colorScheme.primary
+                    }
+                    val icon = when (notif.type) {
+                        "review"       -> Icons.Default.Star
+                        "task"         -> Icons.Default.Schedule
+                        "team"         -> Icons.Default.Groups
+                        "mention"      -> Icons.Default.AlternateEmail
+                        "announcement" -> Icons.Default.Campaign
+                        else           -> Icons.Default.Notifications
+                    }
+                    PMCard(
+                        modifier = if (!notif.isRead)
+                            Modifier.border(1.dp, MaterialTheme.colorScheme.primary.copy(0.25f), RoundedCornerShape(14.dp))
+                        else Modifier
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp).fillMaxWidth(),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier.size(42.dp).clip(RoundedCornerShape(12.dp))
+                                    .background(color.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) { Icon(icon, null, tint = color, modifier = Modifier.size(20.dp)) }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text(notif.title, fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                                    if (!notif.isRead) Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))
+                                }
+                                Text(notif.body, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 3.dp))
+                                Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text(notif.time, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        if (!notif.isRead) {
+                                            Box(
+                                                modifier = Modifier.clip(RoundedCornerShape(6.dp))
+                                                    .background(MaterialTheme.colorScheme.primary.copy(0.1f))
+                                                    .clickable { notifs = notifs.map { if (it.id == notif.id) it.copy(isRead = true) else it } }
+                                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                                            ) { Text("Mark read", fontSize = 10.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold) }
+                                        }
+                                        Box(
+                                            modifier = Modifier.clip(RoundedCornerShape(6.dp))
+                                                .background(Danger.copy(0.08f))
+                                                .clickable { notifs = notifs.filter { it.id != notif.id } }
+                                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                                        ) { Text("Remove", fontSize = 10.sp, color = Danger, fontWeight = FontWeight.SemiBold) }
+                                    }
+                                }
                             }
-                            Text(notif.body, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 3.dp))
-                            Text(notif.time, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), modifier = Modifier.padding(top = 4.dp))
                         }
                     }
                 }
@@ -304,3 +405,136 @@ fun NotificationsPage() {
         }
     }
 }
+// --- CHAT SCREEN -------------------------------------------------------------
+@Composable
+fun ChatScreen() {
+    var searchQuery by remember { mutableStateOf("") }
+    var activeChat by remember { mutableStateOf<String?>(null) }
+
+    if (activeChat != null) {
+        FullScreenChat(userName = activeChat!!, onClose = { activeChat = null })
+        return
+    }
+
+    val recentChats = listOf(
+        Pair("Dr. Anand Kumar", "Mentor"),
+        Pair("Rahul Verma", "Student � 6BCA_01")
+    )
+
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp).padding(bottom = 90.dp)) {
+        Text("Chat", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 16.dp))
+        
+        PMInput(
+            label = "Search by College ID or Username...",
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            icon = Icons.Default.Search
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        if (searchQuery.isNotBlank()) {
+            Text("Search Results", fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
+            PMCard(onClick = { activeChat = searchQuery }) {
+                Row(modifier = Modifier.padding(14.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    PMAvatar(name = searchQuery, size = 40, color = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(searchQuery, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text("Tap to start chatting", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        } else {
+            Text("Recent Chats", fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp))
+            if (recentChats.isEmpty()) {
+                PMEmptyState(
+                    emoji = "??",
+                    title = "No recent chats",
+                    subtitle = "Search for a user by their College ID to start a conversation."
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    recentChats.forEach { (name, desc) ->
+                        PMCard(onClick = { activeChat = name }) {
+                            Row(modifier = Modifier.padding(14.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                PMAvatar(name = name, size = 40, color = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(name, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text(desc, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FullScreenChat(userName: String, onClose: () -> Unit) {
+    var messageText by remember { mutableStateOf("") }
+    var messages by remember {
+        mutableStateOf(listOf(
+            Triple(userName, "Hello! How can I help you?", false)
+        ))
+    }
+    
+    Column(modifier = Modifier.fillMaxSize().padding(bottom = 90.dp)) {
+        // Chat Header
+        Row(
+            modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary).padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.clickable { onClose() })
+                PMAvatar(name = userName, size = 36, color = Color.White)
+                Text(userName, fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
+            }
+        }
+
+        // Messages
+        LazyColumn(
+            modifier = Modifier.weight(1f).padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            reverseLayout = true
+        ) {
+            items(messages.reversed()) { (sender, text, isMe) ->
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = if (isMe) Arrangement.End else Arrangement.Start) {
+                    Box(
+                        modifier = Modifier.widthIn(max = 260.dp)
+                            .clip(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomStart = if (isMe) 14.dp else 4.dp, bottomEnd = if (isMe) 4.dp else 14.dp))
+                            .background(if (isMe) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                    ) {
+                        Text(text, color = if (isMe) Color.White else MaterialTheme.colorScheme.onSurface, fontSize = 14.sp)
+                    }
+                }
+            }
+        }
+
+        // Input Box
+        Row(
+            modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedTextField(
+                value = messageText, onValueChange = { messageText = it },
+                placeholder = { Text("Type a message...", fontSize = 14.sp) },
+                modifier = Modifier.weight(1f).height(50.dp), shape = RoundedCornerShape(25.dp),
+                colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant, focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant, unfocusedBorderColor = Color.Transparent, focusedBorderColor = Color.Transparent),
+                singleLine = true
+            )
+            IconButton(
+                onClick = { if (messageText.isNotBlank()) { messages = messages + Triple("Me", messageText, true); messageText = "" } },
+                modifier = Modifier.size(46.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary)
+            ) {
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = Color.White, modifier = Modifier.size(20.dp))
+            }
+        }
+    }
+}
+

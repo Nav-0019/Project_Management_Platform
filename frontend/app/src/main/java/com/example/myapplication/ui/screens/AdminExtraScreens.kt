@@ -27,9 +27,9 @@ fun AdminManageUsers() {
     var search by remember { mutableStateOf("") }
     var activeTab by remember { mutableStateOf("students") }
     data class User(val name: String, val id: String, val dept: String, val status: String)
-    val students = listOf(User("Vijay Shah","6BCA2201","Data Science","Active"), User("Priya Agarwal","6BCA2202","AI/ML","Active"), User("Rahul Mehta","4MCA2205","Web Dev","Inactive"), User("Anita Singh","6BCA2203","Data Science","Active"))
-    val faculty = listOf(User("Dr. Anand Kumar","FAC001","Computer Applications","Active"), User("Dr. Lisa Wong","FAC002","AI/ML","Active"), User("Dr. Aman Kumar","FAC003","Web Dev","Active"))
-    val shown = (if (activeTab == "students") students else faculty).filter { it.name.contains(search, true) || it.id.contains(search, true) }
+    val students = remember { mutableStateOf(emptyList<User>()) }
+    val faculty = remember { mutableStateOf(emptyList<User>()) }
+    val shown = (if (activeTab == "students") students.value else faculty.value).filter { it.name.contains(search, true) || it.id.contains(search, true) }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = 90.dp)) {
         Text("Manage Users", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 16.dp))
@@ -43,19 +43,29 @@ fun AdminManageUsers() {
                 }
             }
         }
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            for (u in shown) {
-                PMCard {
-                    Row(modifier = Modifier.padding(14.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        PMAvatar(u.name, size = 40, color = if (activeTab == "students") MaterialTheme.colorScheme.primary else Accent)
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(u.name, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            Text("${u.id} · ${u.dept}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (shown.isEmpty()) {
+            PMEmptyState(
+                emoji = if (activeTab == "students") "🎓" else "👨‍🏫",
+                title = "No ${if (activeTab == "students") "students" else "faculty"} found",
+                subtitle = "Users will appear here once added to the platform.",
+                ctaLabel = "+ Add User",
+                onCta = {}
+            )
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                for (u in shown) {
+                    PMCard {
+                        Row(modifier = Modifier.padding(14.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            PMAvatar(u.name, size = 40, color = if (activeTab == "students") MaterialTheme.colorScheme.primary else Accent)
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(u.name, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text("${u.id} · ${u.dept}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            PMBadge(u.status, color = if (u.status == "Active") Success else MaterialTheme.colorScheme.onSurfaceVariant)
+                            Spacer(Modifier.width(8.dp))
+                            Icon(Icons.Default.MoreVert, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                         }
-                        PMBadge(u.status, color = if (u.status == "Active") Success else MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(Modifier.width(8.dp))
-                        Icon(Icons.Default.MoreVert, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                     }
                 }
             }
@@ -108,7 +118,7 @@ fun AdminTimeline() {
 fun AdminReports() {
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = 90.dp)) {
         Text("System Reports", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 20.dp))
-        for ((label, pct, color) in listOf(Triple("Review 1 Submissions", 82, MaterialTheme.colorScheme.primary), Triple("Review 2 Submissions", 60, Accent), Triple("Final Submissions", 25, Success))) {
+        for ((label, pct, color) in listOf(Triple("Review 1 Submissions", 0, MaterialTheme.colorScheme.primary), Triple("Review 2 Submissions", 0, Accent), Triple("Final Submissions", 0, Success))) {
             PMCard(modifier = Modifier.padding(bottom = 12.dp)) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Row(modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) { Text(label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold); Text("$pct%", color = color, fontWeight = FontWeight.Bold) }
@@ -118,7 +128,11 @@ fun AdminReports() {
         }
         Text("Summary Statistics", fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 12.dp))
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            for (row in listOf(listOf(Triple("Total Students", "248", MaterialTheme.colorScheme.primary), Triple("Faculty", "32", Accent)), listOf(Triple("Active Projects", "61", Success), Triple("Pending Reviews", "12", Warning)), listOf(Triple("Complaints", "5", Danger), Triple("Resolved", "18", Success)))) {
+            for (row in listOf(
+                listOf(Triple("Total Students", "—", MaterialTheme.colorScheme.primary), Triple("Faculty", "—", Accent)),
+                listOf(Triple("Active Projects", "—", Success), Triple("Pending Reviews", "—", Warning)),
+                listOf(Triple("Open Complaints", "—", Danger), Triple("Resolved", "—", Success))
+            )) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                     for ((label, value, color) in row) {
                         PMCard(modifier = Modifier.weight(1f)) {
@@ -170,12 +184,7 @@ fun AdminLockSubmissions() {
 @Composable
 fun AdminComplaints() {
     data class Complaint(val id: Int, val user: String, val role: String, val subject: String, val msg: String, val time: String, var status: String)
-    var complaints by remember { mutableStateOf(listOf(
-        Complaint(1, "Vijay Shah", "Student", "App Crash on Submit", "App crashes when I try to submit project files.", "2h ago", "open"),
-        Complaint(2, "Dr. Lisa Wong", "Faculty", "Review marks not updating", "After submitting review, student scorecard shows no change.", "5h ago", "open"),
-        Complaint(3, "Priya Agarwal", "Student", "Cannot download resources", "Download button shows checkmark but file doesn't download.", "1d ago", "resolved"),
-        Complaint(4, "Ankit Roy", "Student", "Team chat not loading", "Group chat shows blank screen after opening.", "2d ago", "in-progress")
-    )) }
+    var complaints by remember { mutableStateOf(emptyList<Complaint>()) }
     var newSubject by remember { mutableStateOf("") }
     var newMsg by remember { mutableStateOf("") }
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = 90.dp)) {

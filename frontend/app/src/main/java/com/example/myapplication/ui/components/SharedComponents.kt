@@ -128,7 +128,7 @@ fun PMBadge(label: String, color: Color) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PMInput(
-    placeholder: String,
+    label: String,
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -139,7 +139,8 @@ fun PMInput(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+        label = { Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
+        placeholder = { Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha=0.5f), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
         leadingIcon = if (icon != null) {
             { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
         } else null,
@@ -332,6 +333,52 @@ fun PMThemeToggle(themeMode: String, onThemeChange: (String) -> Unit) {
                     }
                 }
             }
+        }
+    }
+}
+
+// ─── EMPTY STATE ─────────────────────────────────────────────────────────────────────────────────────
+@Composable
+fun PMEmptyState(
+    emoji: String,
+    title: String,
+    subtitle: String,
+    ctaLabel: String? = null,
+    onCta: (() -> Unit)? = null
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 48.dp, horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(80.dp)
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(emoji, fontSize = 36.sp)
+        }
+        Spacer(Modifier.height(16.dp))
+        Text(
+            title,
+            fontSize = 17.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            subtitle,
+            fontSize = 13.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        if (ctaLabel != null && onCta != null) {
+            Spacer(Modifier.height(20.dp))
+            PMButton(ctaLabel, onClick = onCta)
         }
     }
 }

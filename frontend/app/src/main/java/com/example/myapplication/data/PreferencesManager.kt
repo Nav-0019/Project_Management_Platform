@@ -47,6 +47,23 @@ class PreferencesManager(context: Context) {
         return prefs.getString("active_dept", "Department") ?: "Department"
     }
 
+    // Profile Details
+    fun saveProfileDetails(headline: String, aboutMe: String, cgpa: String, github: String, linkedin: String) {
+        prefs.edit()
+            .putString("profile_headline_${getActiveEmail()}", headline)
+            .putString("profile_aboutme_${getActiveEmail()}", aboutMe)
+            .putString("profile_cgpa_${getActiveEmail()}", cgpa)
+            .putString("profile_github_${getActiveEmail()}", github)
+            .putString("profile_linkedin_${getActiveEmail()}", linkedin)
+            .apply()
+    }
+
+    fun getProfileHeadline(): String = prefs.getString("profile_headline_${getActiveEmail()}", "") ?: ""
+    fun getProfileAboutMe(): String = prefs.getString("profile_aboutme_${getActiveEmail()}", "") ?: ""
+    fun getProfileCgpa(): String = prefs.getString("profile_cgpa_${getActiveEmail()}", "") ?: ""
+    fun getProfileGithub(): String = prefs.getString("profile_github_${getActiveEmail()}", "") ?: ""
+    fun getProfileLinkedin(): String = prefs.getString("profile_linkedin_${getActiveEmail()}", "") ?: ""
+
     fun saveProjectMode(mode: String) { // "team", "research", ""
         prefs.edit().putString("project_mode", mode).apply()
     }

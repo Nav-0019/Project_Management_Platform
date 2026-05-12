@@ -105,21 +105,12 @@ private fun ModeChooser(userName: String, userDept: String, onSelectMode: (Strin
 @Composable
 fun TeamDashboard(userName: String, onBack: () -> Unit, onNavigate: (String) -> Unit) {
     var hasTeam by remember { mutableStateOf(false) }
-    var showGroupChat by remember { mutableStateOf(false) }
-    var showMentorChat by remember { mutableStateOf(false) }
     if (!hasTeam) { CreateTeamFlow(userName = userName, onBack = onBack, onTeamCreated = { hasTeam = true }); return }
 
     val members = listOf(
-        Pair(userName, "Leader"),
-        Pair("Rahul Verma", "Member"),
-        Pair("Sneha Patel", "Member"),
-        Pair("Anita Singh", "Member")
+        Pair(userName, "Leader")
     )
-    val tasks = listOf(
-        Triple("Design UI", "In Progress", Warning),
-        Triple("Build Backend", "Completed", Success),
-        Triple("Write Documentation", "Pending", MaterialTheme.colorScheme.onSurfaceVariant)
-    )
+    val tasks = emptyList<Triple<String, String, androidx.compose.ui.graphics.Color>>()
 
     Column(
         modifier = Modifier
@@ -133,8 +124,8 @@ fun TeamDashboard(userName: String, onBack: () -> Unit, onNavigate: (String) -> 
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null,
                 modifier = Modifier.clickable { onBack() }.padding(end = 12.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             Column {
-                Text("AI-Based Medical Diagnosis", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
-                Text("Team 6BCA_01 · Data Science", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Project Title (Not Set)", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
+                Text("Team ID (Not Set) · Domain", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
@@ -143,18 +134,18 @@ fun TeamDashboard(userName: String, onBack: () -> Unit, onNavigate: (String) -> 
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                     Text("Project Progress", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                    Text("65%", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
+                    Text("0%", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                PMProgressBar(65, MaterialTheme.colorScheme.primary)
+                PMProgressBar(0, MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.height(6.dp))
-                Text("Guide: Dr. Anand Kumar · Due: Jun 15, 2026", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Guide: Not Assigned · Due: TBD", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
         // Stat Row
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-            listOf(Triple("Tasks", "8", MaterialTheme.colorScheme.primary), Triple("Done", "5", Success), Triple("Days Left", "22", Warning)).forEach { s ->
+            listOf(Triple("Tasks", "0", MaterialTheme.colorScheme.primary), Triple("Done", "0", Success), Triple("Days Left", "--", Warning)).forEach { s ->
                 PMCard(modifier = Modifier.weight(1f)) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text(s.first, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -187,12 +178,16 @@ fun TeamDashboard(userName: String, onBack: () -> Unit, onNavigate: (String) -> 
 
         // Task List
         Text("Recent Tasks", fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 10.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            tasks.forEach { (task, status, color) ->
-                PMCard {
-                    Row(modifier = Modifier.padding(14.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(task, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                        PMBadge(status, color = color)
+        if (tasks.isEmpty()) {
+            PMEmptyState("📋", "No Tasks", "No tasks have been assigned yet.")
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                tasks.forEach { (task, status, color) ->
+                    PMCard {
+                        Row(modifier = Modifier.padding(14.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(task, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                            PMBadge(status, color = color)
+                        }
                     }
                 }
             }
@@ -260,18 +255,8 @@ fun TeamDashboard(userName: String, onBack: () -> Unit, onNavigate: (String) -> 
         Spacer(modifier = Modifier.height(16.dp))
         // Group chat & mentor chat buttons
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            PMButton("💬 Team Group Chat", onClick = { showGroupChat = !showMentorChat.also { showMentorChat = false }; showGroupChat = !showGroupChat }, modifier = Modifier.weight(1f), variant = "outline")
-            PMButton("📩 Mentor Chat", onClick = { showMentorChat = !showGroupChat.also { showGroupChat = false }; showMentorChat = !showMentorChat }, modifier = Modifier.weight(1f))
-        }
-    }
-    if (showGroupChat) {
-        Box(modifier = Modifier.fillMaxSize().padding(bottom = 80.dp), contentAlignment = Alignment.BottomEnd) {
-            com.example.myapplication.ui.components.GroupChatPanel(onClose = { showGroupChat = false })
-        }
-    }
-    if (showMentorChat) {
-        Box(modifier = Modifier.fillMaxSize().padding(bottom = 80.dp), contentAlignment = Alignment.BottomEnd) {
-            com.example.myapplication.ui.components.ChatPanel(onClose = { showMentorChat = false })
+            PMButton("💬 Team Chat", onClick = { onNavigate("group_chat") }, modifier = Modifier.weight(1f), variant = "outline")
+            PMButton("📩 Mentor Chat", onClick = { onNavigate("mentor_chat") }, modifier = Modifier.weight(1f))
         }
     }
 }
@@ -361,10 +346,10 @@ private fun CreateTeamFlow(userName: String, onBack: () -> Unit, onTeamCreated: 
 @Composable
 fun ResearchDashboard(onBack: () -> Unit, onNavigate: (String) -> Unit) {
     val steps = listOf(
-        listOf("browse", "Find Guide", "Browse & request faculty", true, false),
-        listOf("submit", "Submit Project", "Upload your documents", true, false),
-        listOf("review", "Faculty Review", "Approval from guide", true, false),
-        listOf("progress", "Track Progress", "Milestones & phases", false, true),
+        listOf("browse", "Find Guide", "Browse & request faculty", false, false),
+        listOf("submit", "Submit Project", "Upload your documents", false, false),
+        listOf("review", "Faculty Review", "Approval from guide", false, false),
+        listOf("progress", "Track Progress", "Milestones & phases", false, false),
         listOf("eval", "Evaluation", "Results & final score", false, false),
         listOf("resources", "Resources", "Guidelines & templates", false, false)
     )
@@ -390,17 +375,17 @@ fun ResearchDashboard(onBack: () -> Unit, onNavigate: (String) -> Unit) {
         PMCard(modifier = Modifier.padding(bottom = 16.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Overall Research Progress", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("75%", fontSize = 32.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
+                Text("0%", fontSize = 32.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.height(8.dp))
-                PMProgressBar(75, MaterialTheme.colorScheme.primary)
+                PMProgressBar(0, MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.height(6.dp))
-                Text("Mid Review in Progress", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Awaiting Phase 1", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
         // Mini stat row
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)) {
-            listOf(Triple("Guide", "✓", MaterialTheme.colorScheme.primary), Triple("Score", "87", Warning), Triple("Phase", "3/4", Success)).forEach { s ->
+            listOf(Triple("Guide", "--", MaterialTheme.colorScheme.primary), Triple("Score", "0", Warning), Triple("Phase", "0/4", Success)).forEach { s ->
                 PMCard(modifier = Modifier.weight(1f)) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text(s.first, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -571,11 +556,49 @@ fun ResearchSubmissionStatus(onBack: () -> Unit, onViewProgress: () -> Unit) {
 
 @Composable
 fun ResearchFacultyReview(onBack: () -> Unit, onProceed: () -> Unit) {
+    var showDetails by remember { mutableStateOf(false) }
+
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = 90.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 20.dp)) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, null, modifier = Modifier.clickable { onBack() }.padding(end = 12.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             Text("Faculty Review", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
         }
+        
+        // Expandable Project Details
+        PMCard(modifier = Modifier.padding(bottom = 14.dp)) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(modifier = Modifier.fillMaxWidth().clickable { showDetails = !showDetails }, horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("Project Details", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Icon(if (showDetails) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (showDetails) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+                    Spacer(modifier = Modifier.height(10.dp))
+                    
+                    Text("AI-Based Medical Diagnosis", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("Data Science", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 12.dp))
+                    
+                    Text("Team Members", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
+                        PMAvatar("Vijay Shah", size = 28, color = MaterialTheme.colorScheme.primary)
+                        PMAvatar("Rahul Verma", size = 28, color = Color(0xFF6366F1))
+                        PMAvatar("Sneha Patel", size = 28, color = MaterialTheme.colorScheme.tertiary)
+                    }
+                    
+                    Text("Project Goals", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        for (g in listOf("Build AI model for early detection", "Integrate with hospital systems", "Achieve 90%+ accuracy")) {
+                            Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Icon(Icons.Default.CheckCircle, null, tint = Success, modifier = Modifier.size(14.dp).padding(top = 2.dp))
+                                Text(g, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         PMCard(modifier = Modifier.padding(bottom = 14.dp).border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), RoundedCornerShape(12.dp))) {
             Column(modifier = Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)).padding(16.dp).fillMaxWidth()) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp)) {

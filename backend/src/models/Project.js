@@ -1,27 +1,26 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const User = require('./User');
 
-const ProjectSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    description: String,
-    domain: String,
-    goals: [String],
-    leader: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    mentor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    status: { type: String, enum: ['pending', 'active', 'reviewed', 'approved', 'completed'], default: 'pending' },
-    progress: { type: Number, default: 0 },
-    files: [{
-        name: String,
-        url: String,
-        uploadedAt: { type: Date, default: Date.now }
-    }],
-    reviews: [{
-        marks: Number,
-        feedback: String,
-        reviewer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-        createdAt: { type: Date, default: Date.now }
-    }],
-    createdAt: { type: Date, default: Date.now }
+const Project = sequelize.define('Project', {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    name: { type: DataTypes.STRING, allowNull: false },
+    description: { type: DataTypes.TEXT },
+    domain: { type: DataTypes.STRING },
+    goals: { type: DataTypes.JSON, defaultValue: [] },
+    leaderId: { type: DataTypes.UUID, allowNull: false },
+    members: { type: DataTypes.JSON, defaultValue: [] }, // array of user IDs or objects
+    mentorId: { type: DataTypes.UUID },
+    status: { type: DataTypes.STRING, defaultValue: 'pending' }, // pending, active, reviewed, approved, completed
+    progress: { type: DataTypes.INTEGER, defaultValue: 0 },
+    files: { type: DataTypes.JSON, defaultValue: [] }, // array of file objects
+    reviews: { type: DataTypes.JSON, defaultValue: [] } // array of review objects
+}, {
+    timestamps: true
 });
 
-module.exports = mongoose.model('Project', ProjectSchema);
+// Associations
+Project.belongsTo(User, { as: 'leader', foreignKey: 'leaderId' });
+Project.belongsTo(User, { as: 'mentor', foreignKey: 'mentorId' });
+
+module.exports = Project;

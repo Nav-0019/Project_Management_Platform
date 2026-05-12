@@ -1,9 +1,11 @@
 package com.example.myapplication.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -103,45 +105,85 @@ fun AdminDashboard(setAdminTab: (String) -> Unit = {}) {
 // ─── ADMIN REQUESTS ───────────────────────────────────────────────────────────
 @Composable
 fun AdminRequests() {
-    data class Request(val id: Int, val type: String, val from: String, val team: String, val project: String, val domain: String, var status: String)
-    var requests by remember {
-        mutableStateOf(listOf(
-            Request(1, "Student Guide Request", "Vijay Shah", "6BCA_01", "AI-Based Medical Diagnosis", "Data Science", "pending"),
-            Request(2, "Faculty Assignment", "Dr. Lisa Wong", "4MCA_08", "E-commerce Reco", "Web Dev", "pending"),
-            Request(3, "Student Guide Request", "Priya Agarwal", "6BCA_02", "Healthcare Analytics", "AI/ML", "approved")
-        ))
-    }
+    data class TeamMember(val name: String, val role: String)
+    data class Request(
+        val id: Int, val type: String, val from: String, val team: String,
+        val project: String, val domain: String, val deadline: String,
+        val members: List<TeamMember>, val goals: List<String>, var status: String
+    )
+    var requests by remember { mutableStateOf(emptyList<Request>()) }
+    var expandedId by remember { mutableStateOf<Int?>(null) }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = 90.dp)) {
-        Text("Requests", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 16.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            for (r in requests) {
-                PMCard {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(r.type.uppercase(), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 0.5.sp)
-                                Text(r.from, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                                Text("${r.team} · ${r.project}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        Row(modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("Requests", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
+            PMBadge("${requests.count { it.status == "pending" }} pending", color = Warning)
+        }
+        Text("Tap any card to view project details", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 16.dp))
+
+        if (requests.isEmpty()) {
+            PMEmptyState(
+                emoji = "📥",
+                title = "No pending requests",
+                subtitle = "Student guide requests and faculty assignments will appear here."
+            )
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                for (r in requests) {
+                    val isExpanded = expandedId == r.id
+                    PMCard(onClick = { expandedId = if (isExpanded) null else r.id }) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(r.type.uppercase(), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 0.5.sp)
+                                    Text(r.from, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text("${r.team} · ${r.project}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                PMBadge(r.status, color = when (r.status) { "approved" -> Success; "rejected" -> Danger; else -> Warning })
                             }
-                            PMBadge(r.status, color = when (r.status) { "approved" -> Success; "rejected" -> Danger; else -> Warning })
-                        }
-                        PMBadge(r.domain, color = Accent)
-                        if (r.status == "pending") {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                PMButton("Accept", onClick = {
-                                    requests = requests.map { if (it.id == r.id) it.copy(status = "approved") else it }
-                                }, variant = "success", modifier = Modifier.weight(1f))
-                                PMButton("Reject", onClick = {
-                                    requests = requests.map { if (it.id == r.id) it.copy(status = "rejected") else it }
-                                }, variant = "danger", modifier = Modifier.weight(1f))
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(bottom = 8.dp)) {
+                                PMBadge(r.domain, color = Accent)
+                                PMBadge("Due: ${r.deadline}", color = Warning)
                             }
-                        } else {
-                            Spacer(modifier = Modifier.height(10.dp))
-                            val isApproved = r.status == "approved"
-                            Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background((if (isApproved) Success else Danger).copy(alpha = 0.1f)).padding(10.dp)) {
-                                Text(if (isApproved) "✓ Approved — Team notified" else "✗ Rejected — Team notified", color = if (isApproved) Success else Danger, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            if (isExpanded) {
+                                Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+                                Spacer(Modifier.height(10.dp))
+                                Text("TEAM MEMBERS (${r.members.size})", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 0.8.sp, modifier = Modifier.padding(bottom = 8.dp))
+                                Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(bottom = 12.dp)) {
+                                    r.members.forEach { m ->
+                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            androidx.compose.foundation.layout.Box(modifier = Modifier.size(28.dp).clip(androidx.compose.foundation.shape.CircleShape).background(if (m.role == "Leader") MaterialTheme.colorScheme.primary else Accent), contentAlignment = Alignment.Center) {
+                                                Text(m.name.first().toString(), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                            Text(m.name, fontSize = 13.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                                            PMBadge(m.role, color = if (m.role == "Leader") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                    }
+                                }
+                                Text("PROJECT GOALS", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 0.8.sp, modifier = Modifier.padding(bottom = 8.dp))
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(bottom = 12.dp)) {
+                                    r.goals.forEach { g ->
+                                        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            Icon(Icons.Default.CheckCircle, null, tint = Success, modifier = Modifier.size(14.dp).padding(top = 2.dp))
+                                            Text(g, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                    }
+                                }
+                            }
+                            if (r.status == "pending") {
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    PMButton("Accept", onClick = { requests = requests.map { if (it.id == r.id) it.copy(status = "approved") else it } }, variant = "success", modifier = Modifier.weight(1f))
+                                    PMButton("Reject", onClick = { requests = requests.map { if (it.id == r.id) it.copy(status = "rejected") else it } }, variant = "danger", modifier = Modifier.weight(1f))
+                                }
+                            } else {
+                                val isApproved = r.status == "approved"
+                                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background((if (isApproved) Success else Danger).copy(alpha = 0.1f)).padding(10.dp)) {
+                                    Text(if (isApproved) "✓ Approved — Team notified" else "✗ Rejected — Team notified", color = if (isApproved) Success else Danger, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                }
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                                Text(if (isExpanded) "▲ Collapse" else "▼ View Details", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
                             }
                         }
                     }
@@ -219,7 +261,7 @@ fun AdminAddSection() {
 
 // ─── PROFILE ─────────────────────────────────────────────────────────────────
 @Composable
-fun AdminProfile(prefs: com.example.myapplication.data.PreferencesManager, themeMode: String, onThemeChange: (String) -> Unit, onLogout: () -> Unit, setAdminTab: (String) -> Unit = {}) {
+fun AdminProfile(prefs: com.example.myapplication.data.PreferencesManager, themeMode: String, onThemeChange: (String) -> Unit, onLogout: () -> Unit, setAdminTab: (String) -> Unit = {}, onOpenSettings: () -> Unit = {}) {
     val userName = prefs.getActiveName()
     val userEmail = prefs.getActiveEmail()
     var editMode by remember { mutableStateOf(false) }
@@ -265,9 +307,30 @@ fun AdminProfile(prefs: com.example.myapplication.data.PreferencesManager, theme
                 }
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        com.example.myapplication.ui.components.PMThemeToggle(themeMode = themeMode, onThemeChange = onThemeChange)
-        Spacer(modifier = Modifier.height(8.dp))
+        // Account section
+        Text("ACCOUNT", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp, modifier = Modifier.padding(top = 8.dp, bottom = 8.dp))
+        PMCard(modifier = Modifier.padding(bottom = 10.dp)) {
+            Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                for ((label, icon) in listOf(
+                    "Settings" to Icons.Default.Settings,
+                    "Help & Support" to Icons.Default.HelpOutline
+                )) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable { if (label == "Settings") onOpenSettings() }.padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
+                            Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                        }
+                        Text(label, fontSize = 13.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                    }
+                    Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline.copy(0.4f)))
+                }
+            }
+        }
+        Spacer(Modifier.height(4.dp))
         PMButton(
             if (editMode) "Save Profile" else "Edit Profile",
             onClick = { editMode = !editMode },

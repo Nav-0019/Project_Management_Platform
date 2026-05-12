@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,7 +32,7 @@ import com.example.myapplication.data.PreferencesManager
 
 @Composable
 fun AuthScreen(prefs: PreferencesManager, onLogin: (String) -> Unit) {
-    var tab by remember { mutableStateOf("login") }
+    var tab by remember { mutableStateOf("signup") }
     var role by remember { mutableStateOf("student") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -41,6 +42,7 @@ fun AuthScreen(prefs: PreferencesManager, onLogin: (String) -> Unit) {
     var confirmPass by remember { mutableStateOf("") }
     var agreed by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf("") }
+    var adminCode by remember { mutableStateOf("") }
 
     val roles = listOf(
         Triple("student", "Student", "📚"),
@@ -134,32 +136,28 @@ fun AuthScreen(prefs: PreferencesManager, onLogin: (String) -> Unit) {
                         // Fields
                         if (tab == "signup") {
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text("Full Name *", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
-                                    PMInput("Your name", value = name, onValueChange = { name = it })
-                                }
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(if (role == "student") "Roll Number *" else if (role == "admin") "Admin ID *" else "Employee ID *", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
-                                    PMInput(if (role == "student") "e.g. 6BCA2201" else "e.g. EMP01", value = empId, onValueChange = { empId = it })
-                                }
+                                PMInput("Full Name *", value = name, onValueChange = { name = it }, modifier = Modifier.weight(1f))
+                                PMInput(if (role == "student") "Roll Number *" else if (role == "admin") "Admin ID *" else "Employee ID *", value = empId, onValueChange = { empId = it }, modifier = Modifier.weight(1f))
                             }
                             Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-                                Text("Department *", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
-                                PMInput("e.g. Computer Science", value = dept, onValueChange = { dept = it })
+                                PMInput("Department *", value = dept, onValueChange = { dept = it })
                             }
                         }
 
-                        Text(if (role == "student") "Official Email *" else "Email *", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
-                        PMInput("you@university.edu", value = email, onValueChange = { email = it }, icon = Icons.Default.Email)
+                        PMInput(if (role == "student") "Official Email *" else "Email *", value = email, onValueChange = { email = it }, icon = Icons.Default.Email)
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        Text("Password *", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+                        if (tab == "login" && role == "admin") {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            PMInput("Admin Access Code *", value = adminCode, onValueChange = { adminCode = it }, icon = Icons.Default.Shield, isPassword = true)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text("🔒 Admin accounts require institutional approval", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                         PMInput(if (tab == "signup") "Create a strong password" else "Enter password", value = password, onValueChange = { password = it }, icon = Icons.Default.Lock, isPassword = true)
 
                         if (tab == "signup") {
                             Spacer(modifier = Modifier.height(12.dp))
-                            Text("Confirm Password *", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
-                            PMInput("Re-enter password", value = confirmPass, onValueChange = { confirmPass = it }, icon = Icons.Default.Lock, isPassword = true)
+                            PMInput("Confirm Password *", value = confirmPass, onValueChange = { confirmPass = it }, icon = Icons.Default.Lock, isPassword = true)
                             Spacer(modifier = Modifier.height(12.dp))
                             Spacer(modifier = Modifier.height(12.dp))
                             Row(verticalAlignment = Alignment.Top, modifier = Modifier.padding(top = 4.dp)) {
@@ -186,30 +184,69 @@ fun AuthScreen(prefs: PreferencesManager, onLogin: (String) -> Unit) {
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
-                        PMButton(if (tab == "login") "Login" else "Create Account", onClick = { 
+                        val scope = rememberCoroutineScope()
+
+                        PMButton(if (tab == "login") "Login" else "Create Account", onClick = {
                             errorMsg = ""
                             if (tab == "signup") {
-                                if (name.isBlank() || email.isBlank() || password.isBlank() || empId.isBlank() || dept.isBlank()) {
+                                if (role == "admin") {
+                                    errorMsg = "Admin accounts cannot self-register. Contact your institution."
+                                } else if (name.isBlank() || email.isBlank() || password.isBlank() || empId.isBlank() || dept.isBlank()) {
                                     errorMsg = "Please fill all required fields"
                                 } else if (password != confirmPass) {
                                     errorMsg = "Passwords do not match"
                                 } else if (!agreed) {
                                     errorMsg = "You must agree to the terms"
                                 } else {
-                                    prefs.saveAccount(email, password, role, name, empId, dept)
-                                    prefs.saveActiveUser(email, name, empId, dept)
-                                    onLogin(role)
+                                    scope.launch {
+                                        try {
+                                            val map = mapOf("name" to name, "email" to email, "password" to password, "role" to role, "idNumber" to empId, "department" to dept)
+                                            val response = com.example.myapplication.network.ApiClient.apiService.register(map)
+                                            if (response.isSuccessful) {
+                                                prefs.saveAccount(email, password, role, name, empId, dept)
+                                                prefs.saveActiveUser(email, name, empId, dept)
+                                                onLogin(role)
+                                            } else {
+                                                errorMsg = "Registration failed: ${response.message()}"
+                                            }
+                                        } catch (e: Exception) {
+                                            // Fallback: Save locally if API is not running
+                                            prefs.saveAccount(email, password, role, name, empId, dept)
+                                            prefs.saveActiveUser(email, name, empId, dept)
+                                            onLogin(role)
+                                        }
+                                    }
                                 }
                             } else {
                                 if (email.isBlank() || password.isBlank()) {
                                     errorMsg = "Please enter email and password"
+                                } else if (role == "admin" && adminCode.isBlank()) {
+                                    errorMsg = "Admin Access Code is required"
                                 } else {
-                                    val verifiedRole = prefs.verifyAccount(email, password)
-                                    if (verifiedRole != null) {
-                                        prefs.saveActiveUser(email, prefs.getAccountName(email), prefs.getAccountId(email), prefs.getAccountDept(email))
-                                        onLogin(verifiedRole)
-                                    } else {
-                                        errorMsg = "Invalid email or password. Do you have an account?"
+                                    scope.launch {
+                                        try {
+                                            val req = com.example.myapplication.network.AuthRequest(email, password)
+                                            val response = com.example.myapplication.network.ApiClient.apiService.login(req)
+                                            if (response.isSuccessful) {
+                                                val body = response.body()
+                                                if (body != null) {
+                                                    val u = body.user
+                                                    prefs.saveActiveUser(u.email, u.name, u.idNumber, u.department)
+                                                    onLogin(u.role)
+                                                }
+                                            } else {
+                                                errorMsg = "Invalid email or password."
+                                            }
+                                        } catch (e: Exception) {
+                                            // Fallback to local storage if API is down
+                                            val verifiedRole = prefs.verifyAccount(email, password)
+                                            if (verifiedRole != null) {
+                                                prefs.saveActiveUser(email, prefs.getAccountName(email), prefs.getAccountId(email), prefs.getAccountDept(email))
+                                                onLogin(verifiedRole)
+                                            } else {
+                                                errorMsg = "Network error & no local account found."
+                                            }
+                                        }
                                     }
                                 }
                             }

@@ -1,5 +1,4 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 
@@ -27,12 +26,12 @@ app.get('/', (req, res) => {
 
 // Database Connection
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/promanage';
+const sequelize = require('./config/database');
 
-mongoose.connect(MONGO_URI)
+sequelize.sync({ alter: true })
     .then(() => {
-        console.log('Connected to MongoDB');
-        app.listen(PORT, () => {
+        console.log('Connected to SQLite Database via Sequelize');
+        app.listen(PORT, "0.0.0.0", () => {
             console.log(`Server running on port ${PORT}`);
         });
     })

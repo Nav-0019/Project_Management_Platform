@@ -1,23 +1,29 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const UserSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: { type: String, enum: ['student', 'faculty', 'admin'], default: 'student' },
-    idNumber: { type: String, required: true, unique: true }, // Roll No or Faculty ID
-    department: { type: String, required: true },
+const User = sequelize.define('User', {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    name: { type: DataTypes.STRING, allowNull: false },
+    email: { type: DataTypes.STRING, allowNull: false, unique: true },
+    password: { type: DataTypes.STRING, allowNull: false },
+    role: { type: DataTypes.STRING, defaultValue: 'student' }, // student, faculty, admin
+    idNumber: { type: DataTypes.STRING, allowNull: false, unique: true }, // Roll No or Faculty ID
+    department: { type: DataTypes.STRING, allowNull: false },
     profile: {
-        headline: String,
-        aboutMe: String,
-        skills: [String],
-        cgpa: String,
-        github: String,
-        linkedin: String,
-        isLookingForTeam: { type: Boolean, default: true },
-        isOpenToJoin: { type: Boolean, default: true }
-    },
-    createdAt: { type: Date, default: Date.now }
+        type: DataTypes.JSON,
+        defaultValue: {
+            headline: '',
+            aboutMe: '',
+            skills: [],
+            cgpa: '',
+            github: '',
+            linkedin: '',
+            isLookingForTeam: true,
+            isOpenToJoin: true
+        }
+    }
+}, {
+    timestamps: true
 });
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = User;

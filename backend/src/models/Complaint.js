@@ -1,11 +1,17 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const User = require('./User');
 
-const ComplaintSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    subject: { type: String, required: true },
-    message: { type: String, required: true },
-    status: { type: String, enum: ['open', 'in-progress', 'resolved'], default: 'open' },
-    createdAt: { type: Date, default: Date.now }
+const Complaint = sequelize.define('Complaint', {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    userId: { type: DataTypes.UUID, allowNull: false },
+    subject: { type: DataTypes.STRING, allowNull: false },
+    message: { type: DataTypes.TEXT, allowNull: false },
+    status: { type: DataTypes.STRING, defaultValue: 'open' }
+}, {
+    timestamps: true
 });
 
-module.exports = mongoose.model('Complaint', ComplaintSchema);
+Complaint.belongsTo(User, { as: 'user', foreignKey: 'userId' });
+
+module.exports = Complaint;
